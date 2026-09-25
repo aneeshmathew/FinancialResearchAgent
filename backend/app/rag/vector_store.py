@@ -40,7 +40,7 @@ class SECVectorStore:
         self._ensure_collection()
 
     def _ensure_collection(self) -> None:
-        """Creates the Qdrant collection if it does not already exist."""
+        """Creates the Qdrant collection and payload indexes if they do not already exist."""
         collections = self.client.get_collections().collections
         exists = any(c.name == self.collection_name for c in collections)
         if not exists:
@@ -51,6 +51,22 @@ class SECVectorStore:
                     distance=qmodels.Distance.COSINE
                 )
             )
+        
+        # Ensure payload field indexes exist for fast filtered hybrid search
+        for field_name, field_type in [
+            ("ticker", qmodels.PayloadSchemaType.KEYWORD),
+            ("filing_type", qmodels.PayloadSchemaType.KEYWORD),
+            ("fiscal_year", qmodels.PayloadSchemaType.INTEGER),
+        ]:
+            try:
+                self.client.create_payload_index(
+                    collection_name=self.collection_name,
+                    field_name=field_name,
+                    field_schema=field_type,
+                )
+            except Exception:
+                # Index already exists or not needed for in-memory mode
+                pass
 
     def get_embedding(self, text: str) -> List[float]:
         """
