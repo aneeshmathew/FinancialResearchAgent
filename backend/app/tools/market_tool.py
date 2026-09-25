@@ -24,6 +24,8 @@ FALLBACK_MARKET_DATA = {
         "peg_ratio": 2.45,
         "gross_margin": 46.2,
         "operating_margin": 31.5,
+        "net_margin": 24.1,
+        "revenue_growth": 6.1,
         "fifty_two_week_high": 237.23,
         "fifty_two_week_low": 164.08,
         "revenue_trend": [
@@ -44,6 +46,8 @@ FALLBACK_MARKET_DATA = {
         "peg_ratio": 2.10,
         "gross_margin": 69.8,
         "operating_margin": 44.6,
+        "net_margin": 34.2,
+        "revenue_growth": 15.2,
         "fifty_two_week_high": 468.35,
         "fifty_two_week_low": 309.45,
         "revenue_trend": [
@@ -63,6 +67,8 @@ FALLBACK_MARKET_DATA = {
         "peg_ratio": 1.15,
         "gross_margin": 75.1,
         "operating_margin": 62.1,
+        "net_margin": 55.0,
+        "revenue_growth": 122.4,
         "fifty_two_week_high": 140.76,
         "fifty_two_week_low": 40.50,
         "revenue_trend": [
@@ -101,8 +107,10 @@ def fetch_ticker_metrics(ticker: str) -> Dict[str, Any]:
             peg = info.get("pegRatio") or 0.0
             gross_m = (info.get("grossMargins") or 0.0) * 100
             op_m = (info.get("operatingMargins") or 0.0) * 100
+            net_m = (info.get("profitMargins") or 0.0) * 100
+            rev_growth = (info.get("revenueGrowth") or 0.0) * 100
 
-            # Revenue trend from quarterly financials
+            # Revenue and net income trend from quarterly financials
             trend = []
             try:
                 qf = t.quarterly_financials
@@ -110,10 +118,26 @@ def fetch_ticker_metrics(ticker: str) -> Dict[str, Any]:
                     revs = qf.loc["Total Revenue"].dropna()
                     for date_col, rev_val in list(revs.items())[:4]:
                         period_str = str(date_col)[:7]
-                        trend.append({
+                        net_inc = None
+                        for inc_key in [
+                            "Net Income From Continuing Operation Net Minority Interest",
+                            "Net Income",
+                            "Net Income Common Stockholders",
+                            "Operating Income"
+                        ]:
+                            if inc_key in qf.index:
+                                val = qf.loc[inc_key].get(date_col)
+                                if val is not None and str(val) != "nan":
+                                    net_inc = round(float(val) / 1e9, 2)
+                                    break
+
+                        item = {
                             "period": period_str,
                             "revenue_billions": round(float(rev_val) / 1e9, 2)
-                        })
+                        }
+                        if net_inc is not None:
+                            item["net_income_billions"] = net_inc
+                        trend.append(item)
                     trend.reverse()
             except Exception:
                 pass
@@ -132,6 +156,8 @@ def fetch_ticker_metrics(ticker: str) -> Dict[str, Any]:
                 "peg_ratio": round(float(peg), 2) if peg else None,
                 "gross_margin": round(float(gross_m), 1) if gross_m else None,
                 "operating_margin": round(float(op_m), 1) if op_m else None,
+                "net_margin": round(float(net_m), 1) if net_m else None,
+                "revenue_growth": round(float(rev_growth), 1) if rev_growth else None,
                 "fifty_two_week_high": info.get("fiftyTwoWeekHigh"),
                 "fifty_two_week_low": info.get("fiftyTwoWeekLow"),
                 "revenue_trend": trend
@@ -156,6 +182,8 @@ def fetch_ticker_metrics(ticker: str) -> Dict[str, Any]:
         "peg_ratio": None,
         "gross_margin": None,
         "operating_margin": None,
+        "net_margin": None,
+        "revenue_growth": None,
         "fifty_two_week_high": None,
         "fifty_two_week_low": None,
         "revenue_trend": []

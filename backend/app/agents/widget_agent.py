@@ -34,6 +34,7 @@ def widget_agent_node(state: FinancialState) -> Dict[str, Any]:
     pe = metrics.get("trailing_pe")
     gross_m = metrics.get("gross_margin")
     op_m = metrics.get("operating_margin")
+    rev_growth = metrics.get("revenue_growth")
 
     card_items = [
         MetricCardItem(
@@ -59,6 +60,24 @@ def widget_agent_node(state: FinancialState) -> Dict[str, Any]:
             subtext="Profitability"
         )
     ]
+
+    # Add operating margin and revenue growth if available
+    if op_m is not None:
+        card_items.append(MetricCardItem(
+            label="Operating Margin",
+            value=f"{op_m:.1f}%",
+            change_direction="positive" if op_m > 15 else "neutral",
+            subtext="Operational Efficiency"
+        ))
+
+    if rev_growth is not None:
+        card_items.append(MetricCardItem(
+            label="Revenue Growth (YoY)",
+            value=f"{rev_growth:.1f}%",
+            change_direction="positive" if rev_growth > 0 else "negative",
+            change_percentage=round(abs(rev_growth), 1),
+            subtext="Annual Growth Rate"
+        ))
 
     metric_widget = MetricCardWidget(
         id=f"kpi-metrics-{ticker.lower()}",
@@ -90,7 +109,50 @@ def widget_agent_node(state: FinancialState) -> Dict[str, Any]:
         )
         generated_widgets.append(chart_widget.model_dump())
 
-    # 3. SEC Risk Item Widgets
+    # 3. Profitability & Margin Chart Widget (area chart for margins)
+    if gross_m is not None and op_m is not None:
+        net_m = metrics.get("net_margin")
+        margin_data = []
+        margin_series = [
+            ChartSeries(key="gross", name="Gross Margin %", color="#3b82f6"),
+            ChartSeries(key="operating", name="Operating Margin %", color="#f59e0b"),
+        ]
+
+        if net_m is not None:
+            margin_series.append(
+                ChartSeries(key="net", name="Net Margin %", color="#10b981")
+            )
+
+        # If we have trend data, build margin comparison from quarterly data
+        if rev_trend and len(rev_trend) >= 2:
+            for point in rev_trend:
+                entry: Dict[str, Any] = {"period": point.get("period", "")}
+                entry["gross"] = round(gross_m, 1)
+                entry["operating"] = round(op_m, 1)
+                if net_m is not None:
+                    entry["net"] = round(net_m, 1)
+                margin_data.append(entry)
+        else:
+            # Single-point snapshot
+            entry: Dict[str, Any] = {"period": "Current"}
+            entry["gross"] = round(gross_m, 1)
+            entry["operating"] = round(op_m, 1)
+            if net_m is not None:
+                entry["net"] = round(net_m, 1)
+            margin_data = [entry]
+
+        margin_chart = ChartWidget(
+            id=f"margin-profile-{ticker.lower()}",
+            title=f"{company_name} Profitability Margins",
+            description="Gross, operating, and net margin percentages — higher is better",
+            chart_kind="area",
+            x_axis_key="period",
+            series=margin_series,
+            data=margin_data
+        )
+        generated_widgets.append(margin_chart.model_dump())
+
+    # 4. SEC Risk Item Widgets
     for idx, doc in enumerate(sec_context[:2]):
         headline = doc.get("section", f"SEC Disclosure Risk #{idx+1}")
         text_excerpt = doc.get("text", "")
@@ -112,7 +174,7 @@ def widget_agent_node(state: FinancialState) -> Dict[str, Any]:
         "type": "tool_call",
         "content": (
             f"Widget Generator Agent: Created {len(generated_widgets)} UI widget blueprints "
-            f"(KPI Metric Cards, Revenue Trend Chart, and SEC Risk Disclosures)."
+            f"(KPI Metric Cards, Revenue Chart, Profitability Margins, and SEC Risk Disclosures)."
         ),
         "details": {"widgets_count": len(generated_widgets)}
     }
