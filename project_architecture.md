@@ -15,15 +15,19 @@ The Autonomous Market & Financial Research Dashboard is a multi-agent AI applica
 
 ## 2. System Architecture & Component Design
 
+The system is architected as two decoupled repositories to maximize deployment agility and eliminate serverless execution timeouts:
+1. **`FinancialResearchAgent` (Frontend):** Next.js 14 hosted on Vercel Edge CDN for instant UI interactions.
+2. **`FinancialResearchAgent_Backend` (Backend):** FastAPI + LangGraph hosted on Render persistent containers for long-running multi-agent pipelines and SSE streaming.
+
 ```
                      +---------------------------------------+
-                     |         Next.js 14 Frontend           |
+                     |  FinancialResearchAgent (Next.js 14)  |
                      |  (React, Tailwind, Recharts, SSE Client)|
                      +-------------------|-------------------+
                                          | HTTP / SSE Stream
                                          v
                      +---------------------------------------+
-                     |          FastAPI Gateway API          |
+                     | FinancialResearchAgent_Backend (FastAPI)|
                      +-------------------|-------------------+
                                          |
                                          v
@@ -41,7 +45,7 @@ The Autonomous Market & Financial Research Dashboard is a multi-agent AI applica
             v                           v                           v
 +------------------------+  +------------------------+  +------------------------+
 |  Qdrant / Vector Index |  |   Alpha Vantage / FMP  |  | Dynamic Widget Stream  |
-|  (SEC 10-K/10-Q Docs)  |  |        REST APIs       |  |  (JSON Component Schemas)|
+|  (SEC 10-K/10-Q Docs)  |  |   & Yahoo Finance APIs |  |  (JSON Component Schemas)|
 +------------------------+  +------------------------+  +------------------------+
 ```
 
@@ -51,12 +55,12 @@ The Autonomous Market & Financial Research Dashboard is a multi-agent AI applica
 
 | Domain | Technology / Library | Purpose |
 | :--- | :--- | :--- |
-| **Frontend** | Next.js 14 (App Router), Tailwind CSS, Recharts | Dynamic streaming UI dashboard render |
-| **Backend Framework**| FastAPI, Uvicorn, Asyncio | Async SSE endpoint handler |
+| **Frontend Repository** | Next.js 14 (App Router), Tailwind CSS, Recharts | Dynamic streaming UI dashboard on Vercel |
+| **Backend Framework**| FastAPI, Uvicorn, Gunicorn, Asyncio | Async SSE endpoint handler on Render |
 | **Agent Framework** | LangGraph, LangChain Core | State graph management, supervisor/sub-agent routing |
-| **LLM Engines** | OpenAI GPT-4o / Anthropic Claude 3.5 Sonnet | Reasoning, function calling, schema generation |
-| **Vector DB / RAG** | Qdrant (or Pinecone) + BGE-Large / OpenAI Embeddings | Hybrid vector store with metadata filtering |
-| **Observability** | LangSmith or Arize Phoenix | Agent trace inspection, tool usage, latency profiling |
+| **LLM Engines** | Gemini 3.5 Flash Lite / OpenAI GPT-4o / Claude 3.5 | Reasoning, planning, schema generation |
+| **Vector DB / RAG** | Qdrant Cloud + Dense Embeddings | Hybrid vector store with metadata filtering |
+| **Observability** | LangSmith | Agent trace inspection, tool usage, latency profiling |
 
 ---
 

@@ -1,118 +1,130 @@
-# Autonomous Market & Financial Research Dashboard
+# Autonomous Market & Financial Research Dashboard (Frontend)
 
-> A multi-agent AI system built with **LangGraph**, **FastAPI**, **Qdrant**, and **Next.js 14** that autonomously conducts equity research, indexes SEC EDGAR filings, retrieves real-time market data, and streams dynamic interactive UI widgets (charts, metric cards, risk factors) alongside comprehensive institutional research memos.
+> A modern **Next.js 14** interactive financial research dashboard that connects to an autonomous multi-agent backend via Server-Sent Events (SSE). Streams real-time agent reasoning steps, dynamically renders interactive widgets (KPI metric cards, revenue trend charts, risk badges), and live-renders formatted equity research memoranda with dark and light theme support.
 
 ---
 
-## Architecture Overview
+## Two-Repository Architecture
 
-```
-                      +---------------------------------------+
-                      |         Next.js 14 Frontend           |
-                      |  (React, Tailwind, Recharts, SSE Client)|
-                      +-------------------|-------------------+
-                                          | HTTP / SSE Stream
-                                          v
-                      +---------------------------------------+
-                      |          FastAPI Gateway API          |
-                      +-------------------|-------------------+
-                                          |
-                                          v
-                      +---------------------------------------+
-                      |    LangGraph Agent Coordinator        |
-                      +----|--------------|---------------|---+
-                           |              |               |
-      +--------------------+              |               +--------------------+
-      v                                   v                                    v
-+------------------------+  +------------------------+  +------------------------+
-|   SEC / Disclosure     |  |   Market Data & News   |  |   Financial Analyst    |
-|     Search Agent       |  |     Search Agent       |  |     Synthesis Agent    |
-+-----------|------------+  +-----------|------------+  +-----------|------------+
-            |                           |                           |
-            v                           v                           v
-+------------------------+  +------------------------+  +------------------------+
-|  Qdrant / Vector Index |  |      Yahoo Finance     |  | Dynamic Widget Stream  |
-|  (SEC 10-K/10-Q Docs)  |  |        REST APIs       |  |  (JSON Component Schemas)|
-+------------------------+  +------------------------+  +------------------------+
-```
+This project is decoupled into two repositories for streamlined CI/CD, modular scaling, and zero-config cloud deployments:
+
+| Repository | Tech Stack | Role | Target Deployment |
+| :--- | :--- | :--- | :--- |
+| **[FinancialResearchAgent](https://github.com/aneeshmathew/FinancialResearchAgent)** *(This Repo)* | Next.js 14, React 18, Tailwind CSS, Recharts | Interactive UI dashboard, SSE client, dynamic widget renderer, dark/light theme | **Vercel** (Zero-config edge CDN) |
+| **[FinancialResearchAgent_Backend](https://github.com/aneeshmathew/FinancialResearchAgent_Backend)** | FastAPI, Python 3.11/3.14, LangGraph, Qdrant | Supervisor agent, SEC 10-K RAG, live Yahoo Finance tools, widget generator, report synthesizer | **Render** (Persistent Linux container) |
 
 ---
 
 ## Key Features
 
-1. **Multi-Agent Orchestration (LangGraph):**
-   - **Supervisor Agent:** Parses intent, extracts ticker, builds multi-stage research plan, and routes to specialists.
-   - **SEC Filing Search Agent:** Performs hybrid dense/keyword retrieval over SEC 10-K and 10-Q filings.
-   - **Market Metrics Agent:** Fetches real-time price, valuation multiples (P/E, PEG), profit margins, and quarterly revenue trends.
-   - **Widget Generator Agent:** Converts quantitative findings into standardized JSON component blueprints.
-   - **Synthesizer Agent:** Drafts an institutional equity research memorandum with inline legal citations.
+1. **Server-Sent Events (SSE) Streaming Client (`useEventSource`):**
+   - Consumes `/api/v1/research/stream` with real-time multiplexing across 4 event types:
+     - `agent_thought`: Live reasoning logs from Supervisor and specialist agents.
+     - `tool_call`: Live external tool execution telemetry (SEC EDGAR, Yahoo Finance).
+     - `ui_component`: Dynamic JSON component blueprints rendered on-the-fly.
+     - `text_chunk`: Token-by-token streaming markdown equity research memo.
 
-2. **Dynamic UI Streaming (Server-Sent Events):**
-   - Real-time SSE stream (`/api/v1/research/stream`) emitting four distinct event types:
-     - `event: agent_thought` (Internal reasoning and planning updates)
-     - `event: tool_call` (Execution logs from tools)
-     - `event: ui_component` (JSON blueprints for React/Recharts widgets)
-     - `event: text_chunk` (Streaming Markdown report tokens)
+2. **Adaptive Dynamic Widget Renderer (`WidgetRenderer`):**
+   - **Metric Cards:** Real-time stock prices, 52-week ranges, P/E ratios, profit margins with change indicators.
+   - **Interactive Charts:** Recharts bar and line charts displaying historical revenue trajectories.
+   - **Risk Assessment Badges:** Categorized SEC 10-K risk factors with severity badges (High / Medium / Low).
+   - **Financial Tables:** Multi-year structured balance sheet and income statement comparisons.
 
-3. **Hybrid RAG over SEC Disclosures (Qdrant):**
-   - In-memory embedded Qdrant vector database (zero Docker requirement for local development).
-   - Dense semantic vector search + keyword BM25 boost + metadata filtering (`ticker`, `filing_type`, `fiscal_year`).
-
-4. **Interactive Next.js 14 Dashboard:**
-   - Dark-mode responsive interface.
-   - Live widget renderer mounting KPI metric cards, Recharts charts, and SEC risk badges on the fly.
-   - Interactive timeline of agent thoughts and tool calls.
+3. **Theme & UX Enhancements:**
+   - Full dark and light theme toggle with smooth CSS transitions.
+   - One-click preset search queries for popular tickers (AAPL, MSFT, NVDA, GOOGL, AMZN, TSLA).
+   - Pre-populated default prompt for instant zero-click demonstration.
+   - Real-time connection status indicators (`Streaming...`, `Completed`, `Error`).
 
 ---
 
-## Quickstart Guide
+## Local Development Quickstart
 
-### 1. Prerequisites
-- Python 3.10+ (or Python 3.14)
-- Node.js 18+ & npm
+### Prerequisites
+- Node.js 18.x or 20.x
+- npm or pnpm
 
-### 2. Backend Setup
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment variables
-cp .env.example .env
-# (Optional) Add your OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY in backend/.env
-
-# Run backend test suite
-PYTHONPATH=. pytest tests/
-
-# Launch FastAPI development server (port 8000)
-PYTHONPATH=. uvicorn app.main:app --reload --port 8000
-```
-
-### 3. Frontend Setup
+### 1. Installation
 
 ```bash
-# Navigate to frontend directory
-cd frontend
+# Clone the frontend repository
+git clone https://github.com/aneeshmathew/FinancialResearchAgent.git
+cd FinancialResearchAgent
 
 # Install dependencies
 npm install
+```
 
-# Start Next.js development server (port 3000)
+### 2. Configure Environment
+
+```bash
+cp .env.example .env.local
+```
+
+By default, `.env.local` points to `http://localhost:8000`:
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+```
+*(If your backend is already deployed to Render, you can point directly to `https://your-backend.onrender.com`)*.
+
+### 3. Start Development Server
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your web browser.
 
 ---
 
-## Detailed Documentation
-For an in-depth walkthrough of the design decisions, data structures, and multi-agent mental model written for beginners, read:
-- [01 - System Architecture & Setup Guide](docs/01_system_architecture_and_setup.md)
-- [Project Architecture Specification](project_architecture.md)
+## Deployment to Vercel (Zero-Config)
+
+Because this repository has `package.json` at the root, deployment on Vercel is completely zero-config:
+
+1. Import this repository into [Vercel](https://vercel.com).
+2. Set Environment Variable:
+   - `NEXT_PUBLIC_BACKEND_URL`: Your live Render backend URL (e.g. `https://financial-research-backend.onrender.com`).
+3. Click **Deploy**.
+
+For detailed production instructions including CORS configuration and Render setup, see [deployment.md](deployment.md).
+
+---
+
+## Project Structure
+
+```
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx         # Root layout with ThemeProvider
+│   │   ├── page.tsx           # Main dashboard interface
+│   │   └── globals.css        # Tailwind styling & dark/light variables
+│   ├── components/
+│   │   ├── stream/
+│   │   │   ├── AgentThoughtLog.tsx   # Real-time multi-agent reasoning timeline
+│   │   │   └── MarkdownReport.tsx    # Streaming research report viewer
+│   │   └── widgets/
+│   │       ├── ChartWidget.tsx       # Dynamic Recharts revenue graphs
+│   │       ├── MetricCardWidget.tsx  # KPI metric cards
+│   │       ├── RiskItemWidget.tsx    # SEC disclosure risk cards
+│   │       ├── TableWidget.tsx       # Comparative financial tables
+│   │       └── WidgetRenderer.tsx    # Dynamic widget registry dispatcher
+│   ├── context/
+│   │   └── ThemeContext.tsx   # Dark/light theme state & toggle
+│   ├── hooks/
+│   │   └── useEventSource.ts  # SSE streaming client hook
+│   └── types/
+│       └── index.ts           # TypeScript schemas for SSE events & widgets
+├── next.config.js             # Local API proxy rewrites
+├── tailwind.config.ts         # Tailwind design tokens
+├── deployment.md              # Production deployment guide (Vercel + Render)
+└── package.json               # Root npm dependencies & build scripts
+```
+
+---
+
+## Documentation Links
+
+- **Deployment Guide:** [deployment.md](deployment.md)
+- **Project Architecture:** [project_architecture.md](project_architecture.md)
+- **System Architecture & Setup:** [docs/01_system_architecture_and_setup.md](docs/01_system_architecture_and_setup.md)
+- **Backend Repository:** [FinancialResearchAgent_Backend](https://github.com/aneeshmathew/FinancialResearchAgent_Backend)

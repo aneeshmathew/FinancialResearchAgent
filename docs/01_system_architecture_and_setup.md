@@ -95,51 +95,55 @@ Instead of relying on a single AI prompt to "do everything", we break the task d
 
 ---
 
-## 4. Project Directory Layout
+## 4. Two-Repository Directory Layout
 
+The project is decoupled into two dedicated repositories for simplified deployments:
+
+### A. Frontend Repository (`FinancialResearchAgent`)
 ```
 FinancialResearchAgent/
 ├── project_architecture.md             # High-level architecture specification
-├── README.md                           # Main repository README
-├── docs/                               # Developer documentation
-│   └── 01_system_architecture_and_setup.md
-├── backend/
-│   ├── .venv/                          # Isolated Python virtual environment
-│   ├── requirements.txt                # Python package dependencies
-│   ├── .env.example                    # Environment variable template
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── config.py                   # Pydantic Settings & environment loader
-│   │   ├── main.py                     # FastAPI application & SSE endpoints
-│   │   ├── agents/                     # LangGraph agent definitions
-│   │   │   ├── __init__.py
-│   │   │   ├── state.py                # FinancialState typed dictionary
-│   │   │   ├── supervisor.py           # Coordinator / Planner agent
-│   │   │   ├── sec_agent.py            # SEC Filing search specialist
-│   │   │   ├── market_agent.py         # Financial metrics specialist
-│   │   │   └── widget_agent.py         # JSON UI blueprint generator
-│   │   ├── graph/                      # StateGraph definition & compiled runner
-│   │   │   ├── __init__.py
-│   │   │   └── workflow.py
-│   │   ├── tools/                      # Reusable agent tools
-│   │   │   ├── __init__.py
-│   │   │   ├── sec_tool.py             # SEC retrieval tool
-│   │   │   └── market_tool.py          # Market & ratio fetching tool
-│   │   ├── rag/                        # Vector search & document ingestion
-│   │   │   ├── __init__.py
-│   │   │   ├── sec_ingestion.py        # Edgar filings fetcher & chunker
-│   │   │   └── vector_store.py         # Qdrant client & hybrid search
-│   │   └── schemas/                    # Pydantic models & event schemas
-│   │       ├── __init__.py
-│   │       ├── events.py               # SSE event specifications
-│   │       └── widgets.py              # Chart & metric widget contracts
-│   └── tests/                          # Backend unit & integration tests
-└── frontend/                           # Next.js 14 Web Application
-    ├── package.json
-    ├── src/
-    │   ├── app/                        # Next.js App Router pages
-    │   ├── components/                 # UI components (Widgets, Stream, Layout)
-    │   └── hooks/                      # Custom React hooks (useEventSource)
+├── deployment.md                       # Vercel & Render deployment guide
+├── README.md                           # Frontend repository overview
+├── .env.example                        # NEXT_PUBLIC_BACKEND_URL template
+├── start_dev.sh                        # Multi-repo local launcher
+├── package.json                        # Root npm dependencies & build scripts
+├── tsconfig.json                       # TypeScript configuration
+├── tailwind.config.ts                  # Tailwind design system
+├── next.config.js                      # Next.js config & API rewrites
+├── docs/                               # Architecture and setup documentation
+└── src/                                # Next.js 14 Web Application
+    ├── app/                            # App router pages, layout & globals.css
+    ├── components/                     # Dynamic widgets, thought logs, report viewer
+    ├── context/                        # ThemeContext (dark & light modes)
+    ├── hooks/                          # Custom React hooks (useEventSource SSE client)
+    └── types/                          # TypeScript schemas for events & widgets
+```
+
+### B. Backend Repository (`FinancialResearchAgent_Backend`)
+```
+FinancialResearchAgent_Backend/
+├── README.md                           # Backend API & multi-agent documentation
+├── render.yaml                         # 1-Click Render Blueprint specification
+├── requirements.txt                    # Python dependencies
+├── .env.example                        # API keys & vector store config template
+├── docs/                               # System guides and model references
+├── app/
+│   ├── config.py                       # Pydantic Settings & environment loader
+│   ├── main.py                         # FastAPI application & SSE endpoints
+│   ├── agents/                         # LangGraph multi-agent team
+│   │   ├── state.py                    # FinancialState typed dictionary
+│   │   ├── supervisor.py               # Coordinator / Planner agent
+│   │   ├── sec_agent.py                # SEC Filing search specialist
+│   │   ├── market_agent.py             # Financial metrics specialist
+│   │   ├── widget_agent.py             # JSON UI blueprint generator
+│   │   └── synthesizer.py              # Research report writing agent
+│   ├── graph/                          # StateGraph definition & compiled runner
+│   │   └── workflow.py
+│   ├── tools/                          # Reusable agent tools (SEC EDGAR, Yahoo Finance)
+│   ├── rag/                            # Vector search & document ingestion (Qdrant)
+│   └── schemas/                        # Pydantic models for SSE events & widgets
+└── tests/                              # Pytest test suite (API, graph, tools, RAG)
 ```
 
 ---
