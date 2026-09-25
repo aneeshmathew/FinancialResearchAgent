@@ -41,7 +41,7 @@ const DEMO_PRESETS = [
 ];
 
 export default function DashboardPage() {
-  const [queryInput, setQueryInput] = useState("");
+  const [queryInput, setQueryInput] = useState(DEMO_PRESETS[0].query);
   const [selectedTicker, setSelectedTicker] = useState("AAPL");
   const [activeTab, setActiveTab] = useState<"report" | "trace">("report");
 
@@ -137,7 +137,7 @@ export default function DashboardPage() {
             <button
               type="submit"
               disabled={isRunning || !queryInput.trim()}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 disabled:opacity-50 transition shadow-lg shadow-emerald-500/20"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/20 whitespace-nowrap"
             >
               <Sparkles className="w-4 h-4" />
               {isRunning ? "Executing Graph..." : "Run Research"}
