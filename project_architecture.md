@@ -1,4 +1,4 @@
-# Option A: Autonomous Market & Financial Research Dashboard
+# Autonomous Market & Financial Research Dashboard
 **Scope & Architecture Specification Document**
 
 ---
