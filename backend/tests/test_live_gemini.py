@@ -20,12 +20,11 @@ import pytest
 import os
 
 
-# ---------------------------------------------------------------------------
-# Skip the whole file unless a real Gemini key is present
-# ---------------------------------------------------------------------------
+from app.config import settings
+
 def _has_real_gemini_key() -> bool:
     """Returns True only when we have a key that isn't the placeholder text."""
-    key = os.environ.get("GEMINI_API_KEY", "")
+    key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")
     return bool(key) and key not in ("your_gemini_api_key_here", "")
 
 

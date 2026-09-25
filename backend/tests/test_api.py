@@ -19,10 +19,12 @@ from app.main import app
 
 client = TestClient(app)
 
+from app.config import settings
+
 # ---------------------------------------------------------------------------
 # Decorator: skip tests that require a network connection + real Gemini key
 # ---------------------------------------------------------------------------
-gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+gemini_key = (settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")).strip()
 _has_key = bool(gemini_key) and gemini_key not in ("", "your_gemini_api_key_here")
 
 NEEDS_NETWORK = pytest.mark.skipif(

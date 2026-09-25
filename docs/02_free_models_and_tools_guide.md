@@ -23,7 +23,7 @@ The entire stack can be run **100% free of charge** using any of the following o
 ## 2. Setting Up Free LLM Models (Choose One)
 
 ### Option A: Google Gemini Free Tier (Recommended — Easiest Cloud Setup)
-Google provides free access to **Gemini 1.5 Flash** and **Gemini 2.0 Flash** via Google AI Studio.
+Google provides free access to **Gemini 3.5 Flash Lite** via Google AI Studio.
 - **Quota:** 15 requests per minute, 1 million tokens per minute, up to 1,500 free requests per day.
 - **Credit Card Required?** **No.**
 
@@ -32,8 +32,8 @@ Google provides free access to **Gemini 1.5 Flash** and **Gemini 2.0 Flash** via
 2. Click **"Get API Key"** $\rightarrow$ **"Create API key"**.
 3. In `backend/.env`, set:
    ```bash
-   GEMINI_API_KEY=AIzaSyYourGeneratedGeminiKeyHere
-   DEFAULT_LLM_MODEL=gemini-1.5-flash
+   GEMINI_API_KEY=your_gemini_api_key_here
+   DEFAULT_LLM_MODEL=gemini-3.5-flash-lite
    ```
 
 ---
