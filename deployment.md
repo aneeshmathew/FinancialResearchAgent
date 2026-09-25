@@ -95,6 +95,9 @@ If you prefer configuring the Web Service manually:
 | `QDRANT_API_KEY` | `eyJhbGciOi...` | Qdrant access token |
 | `QDRANT_COLLECTION_NAME`| `sec_filings` | Vector collection name |
 | `ALLOWED_ORIGINS` | `*` *(or your Vercel URL once deployed)* | Allows frontend to stream data |
+| `LANGCHAIN_TRACING_V2` | `true` | Enables real-time LangSmith agent tracing |
+| `LANGCHAIN_API_KEY` | `lsv2_pt_...` | LangSmith API key |
+| `LANGCHAIN_PROJECT` | `financial-research-agent` | LangSmith project board name |
 
 5. Click **Create Web Service**.
 6. Once deployment finishes, note down your live backend URL from the top of the service page:
