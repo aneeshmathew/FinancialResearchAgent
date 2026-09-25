@@ -28,12 +28,10 @@ def sec_agent_node(state: FinancialState) -> Dict[str, Any]:
         limit=4
     )
 
-    # If nothing in vector store for this ticker, attempt fallback ingestion
+    # If nothing in vector store for this ticker, fetch from SEC EDGAR dynamically
     if not results:
         try:
-            import asyncio
-            # In sync context, we can run the coroutine or seed fallback
-            filings = asyncio.run(fetch_sec_filings_edgar(ticker))
+            filings = fetch_sec_filings_edgar(ticker)
             if filings:
                 chunks = prepare_chunks(filings)
                 store.index_documents(chunks)

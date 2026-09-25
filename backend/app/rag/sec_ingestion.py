@@ -190,12 +190,12 @@ def seed_vector_store(vector_store) -> int:
     return count
 
 
-async def fetch_sec_filings_edgar(
+def fetch_sec_filings_edgar(
     ticker: str,
     filing_type: str = "10-K"
 ) -> List[Dict[str, Any]]:
     """
-    Fetches real SEC filings via SEC EDGAR submission API.
+    Fetches real SEC filings via SEC EDGAR submission API synchronously.
     SEC requires a declared User-Agent header in the format: 'App/1.0 (ContactEmail@domain.com)'.
     """
     headers = {
@@ -204,10 +204,9 @@ async def fetch_sec_filings_edgar(
     }
 
     # Step 1: Resolve ticker to CIK (Central Index Key)
-    # The SEC maintains a public JSON mapping tickers to CIKs
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(
                 "https://www.sec.gov/files/company_tickers.json",
                 headers=headers
             )
@@ -224,7 +223,7 @@ async def fetch_sec_filings_edgar(
                 if cik:
                     # Fetch recent company submissions
                     sub_url = f"https://data.sec.gov/submissions/CIK{cik}.json"
-                    sub_resp = await client.get(sub_url, headers=headers)
+                    sub_resp = client.get(sub_url, headers=headers)
                     if sub_resp.status_code == 200:
                         sub_data = sub_resp.json()
                         recent = sub_data.get("filings", {}).get("recent", {})
@@ -233,8 +232,9 @@ async def fetch_sec_filings_edgar(
                         filing_dates = recent.get("filingDate", [])
 
                         filings_found = []
-                        for i, form in enumerate(forms[:20]):
-                            if form.upper() == filing_type.upper():
+                        for i, form in enumerate(forms[:200]):
+                            # Look for 10-K or 10-Q filings
+                            if form.upper() in (filing_type.upper(), "10-K", "10-Q"):
                                 accession = accession_numbers[i].replace("-", "")
                                 doc_name = recent.get("primaryDocument", [""])[i]
                                 doc_url = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/{doc_name}"
@@ -247,8 +247,11 @@ async def fetch_sec_filings_edgar(
                                     "source_url": doc_url,
                                     "text": f"SEC EDGAR official {form} filing for {company_title} ({ticker.upper()}) filed on {filing_dates[i]}."
                                 })
-                        return filings_found
-    except Exception as e:
+                                if len(filings_found) >= 3:
+                                    break
+                        if filings_found:
+                            return filings_found
+    except Exception:
         # Fallback gracefully if network/SEC Edgar rate limit occurs
         pass
 

@@ -61,10 +61,20 @@ export default function DashboardPage() {
     setQueryInput(preset.query);
   };
 
+  const handleInputChange = (val: string) => {
+    setQueryInput(val);
+    // If user edited away from preset, clear locked preset ticker so supervisor extracts dynamically
+    const matchingPreset = DEMO_PRESETS.find(p => p.query === val);
+    if (!matchingPreset) {
+      setSelectedTicker("");
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!queryInput.trim()) return;
-    startResearch(queryInput, selectedTicker);
+    // If selectedTicker is set from an untouched preset, pass it; otherwise pass empty string to let AI extract from query
+    startResearch(queryInput, selectedTicker || undefined);
   };
 
   const isRunning = status === "connecting" || status === "streaming";
@@ -127,7 +137,7 @@ export default function DashboardPage() {
               <input
                 type="text"
                 value={queryInput}
-                onChange={(e) => setQueryInput(e.target.value)}
+                onChange={(e) => handleInputChange(e.target.value)}
                 placeholder="Enter research inquiry (e.g. Analyze Apple supply chain risks and recent revenue trends)..."
                 disabled={isRunning}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"

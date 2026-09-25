@@ -19,23 +19,55 @@ COMMON_TICKERS = {
     "GOOGLE": "GOOGL",
     "ALPHABET": "GOOGL",
     "META": "META",
-    "FACEBOOK": "META"
+    "FACEBOOK": "META",
+    "IBM": "IBM",
+    "INTERNATIONAL BUSINESS MACHINES": "IBM",
+    "INTEL": "INTC",
+    "AMD": "AMD",
+    "QUALCOMM": "QCOM",
+    "BROADCOM": "AVGO",
+    "ORACLE": "ORCL",
+    "SALESFORCE": "CRM",
+    "NETFLIX": "NFLX",
+    "DISNEY": "DIS",
+    "JPMORGAN": "JPM",
+    "BERKSHIRE": "BRK-B"
 }
 
 
-def extract_ticker_from_text(text: str) -> str:
+def extract_ticker_from_text(text: str, llm=None) -> str:
     """Extracts a stock ticker from user input or matches common company names."""
     # Check for exact company names first
     text_upper = text.upper()
     for name, sym in COMMON_TICKERS.items():
-        if name in text_upper:
+        if re.search(r"\b" + re.escape(name) + r"\b", text_upper):
             return sym
 
-    # Look for $TICKER or isolated 2-5 letter all-caps words
+    # Look for $TICKER (e.g. $IBM, $TSLA)
     dollar_match = re.search(r"\$([A-Z]{1,5})\b", text)
     if dollar_match:
         return dollar_match.group(1)
 
+    # Use LLM to resolve ticker if an LLM is available
+    if llm:
+        try:
+            from langchain_core.messages import SystemMessage, HumanMessage
+            prompt = (
+                f"Identify the stock ticker symbol for the company mentioned in this query: '{text}'. "
+                f"Return ONLY the uppercase ticker symbol (e.g. IBM, AAPL, MSFT, TSLA). "
+                f"If no specific company is mentioned, return AAPL."
+            )
+            resp = llm.invoke([
+                SystemMessage(content="You are a financial entity extraction engine. Output ONLY the ticker symbol."),
+                HumanMessage(content=prompt)
+            ])
+            cleaned = clean_llm_text(resp.content).strip().upper().replace("$", "")
+            if 1 <= len(cleaned) <= 5 and cleaned.isalpha():
+                return cleaned
+        except Exception:
+            pass
+
+    # Look for isolated 2-5 letter all-caps words
     word_match = re.search(r"\b([A-Z]{2,5})\b", text)
     if word_match and word_match.group(1) not in {"THE", "AND", "FOR", "WHAT", "HOW", "SEC", "CEO", "CFO", "RAG", "API"}:
         return word_match.group(1)
@@ -48,8 +80,19 @@ def supervisor_node(state: FinancialState) -> Dict[str, Any]:
     Supervisor Node in LangGraph.
     Inspects user query, builds research plan, and emits initial thought log.
     """
+    llm = get_llm()
     user_query = state.get("user_query") or (state.get("messages", [{}])[-1].get("content", ""))
-    ticker = state.get("ticker") or extract_ticker_from_text(user_query)
+    
+    # Extract ticker from query text first so any explicit mention (e.g. IBM) takes priority over stale UI selection
+    extracted_from_query = extract_ticker_from_text(user_query, llm=llm)
+    explicit_ticker = state.get("ticker", "").strip()
+    
+    if extracted_from_query and extracted_from_query != "AAPL":
+        ticker = extracted_from_query
+    elif explicit_ticker:
+        ticker = explicit_ticker
+    else:
+        ticker = extracted_from_query or "AAPL"
 
     plan = [
         f"1. Query SEC Edgar vector index for {ticker} 10-K/10-Q risk disclosures and operational performance.",
@@ -58,7 +101,6 @@ def supervisor_node(state: FinancialState) -> Dict[str, Any]:
         f"4. Synthesize final comprehensive equity research report."
     ]
 
-    llm = get_llm()
     thought_summary = f"Supervisor: Analyzed request for ticker '{ticker}'. Initiated 4-phase research execution plan."
 
     if llm:
