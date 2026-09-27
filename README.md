@@ -103,7 +103,6 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser.
 │       └── index.ts           # TypeScript schemas for SSE events & widgets
 ├── next.config.js             # Local API proxy rewrites
 ├── tailwind.config.ts         # Tailwind design tokens
-├── deployment.md              # Production deployment guide (Vercel + Render)
 └── package.json               # Root npm dependencies & build scripts
 ```
 

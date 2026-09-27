@@ -1,7 +1,4 @@
 # 01 - System Architecture & Setup Guide
-*A plain-English, beginner-friendly walkthrough of the Autonomous Market & Financial Research Dashboard.*
-
----
 
 ## 1. What Are We Building?
 
@@ -75,7 +72,7 @@ Instead of relying on a single AI prompt to "do everything", we break the task d
 
 ---
 
-## 3. Why These Technologies? (Plain English Decisions)
+## 3. Why These Technologies?
 
 ### A. Why LangGraph instead of simple LangChain chains?
 - Traditional LLM chains run in a straight line: `A -> B -> C -> End`.

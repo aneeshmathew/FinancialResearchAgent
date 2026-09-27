@@ -1,7 +1,5 @@
 # 02 - Guide to Free Models & Tools ($0 Budget Setup)
 
-You do **NOT** need to pay for OpenAI or Anthropic API credits to run, test, and present this project. 
-
 The entire stack can be run **100% free of charge** using any of the following options.
 
 ---
