@@ -77,19 +77,6 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser.
 
 ---
 
-## Deployment to Vercel (Zero-Config)
-
-Because this repository has `package.json` at the root, deployment on Vercel is completely zero-config:
-
-1. Import this repository into [Vercel](https://vercel.com).
-2. Set Environment Variable:
-   - `NEXT_PUBLIC_BACKEND_URL`: Your live Render backend URL (e.g. `https://financial-research-backend.onrender.com`).
-3. Click **Deploy**.
-
-For detailed production instructions including CORS configuration and Render setup, see [deployment.md](deployment.md).
-
----
-
 ## Project Structure
 
 ```
@@ -124,7 +111,5 @@ For detailed production instructions including CORS configuration and Render set
 
 ## Documentation Links
 
-- **Deployment Guide:** [deployment.md](deployment.md)
 - **Project Architecture:** [project_architecture.md](project_architecture.md)
 - **System Architecture & Setup:** [docs/01_system_architecture_and_setup.md](docs/01_system_architecture_and_setup.md)
-- **Backend Repository:** [FinancialResearchAgent_Backend](https://github.com/aneeshmathew/FinancialResearchAgent_Backend)
