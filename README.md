@@ -6,6 +6,7 @@
 
 ## Two-Repository Architecture
 
+```
                       +---------------------------------------+
                       |         FastAPI Gateway API          |
                       |   (/api/v1/research/stream [SSE])     |
@@ -28,6 +29,7 @@
 |  Qdrant / Vector Index |  |      Yahoo Finance     |  | Dynamic Widget Stream  |
 |  (SEC 10-K/10-Q Docs)  |  |        REST APIs       |  |  (JSON Component Schemas)|
 +------------------------+  +------------------------+  +------------------------+
+```
 
 This project is decoupled into two repositories for streamlined CI/CD, modular scaling, and zero-config cloud deployments:
 
